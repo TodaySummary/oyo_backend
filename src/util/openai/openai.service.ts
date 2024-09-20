@@ -19,7 +19,6 @@ export class OpenaiService {
   ): Promise<OpenAI.Chat.Completions.ChatCompletion> {
     const completion = await this.openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
-      max_tokens: 300,
       messages: messages,
     });
 
