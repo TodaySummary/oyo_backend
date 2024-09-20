@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 
 import axios, { AxiosRequestConfig } from 'axios';
 
-import { Items } from '../../oyo/dto/response/items';
+import { Items } from './response/items';
 
 @Injectable()
 export class NewsService {
