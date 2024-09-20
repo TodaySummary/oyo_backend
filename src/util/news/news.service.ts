@@ -1,8 +1,9 @@
 import { HttpService } from '@nestjs/axios';
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { AxiosError, AxiosRequestConfig } from 'axios';
-import { catchError, firstValueFrom } from 'rxjs';
+import { Injectable } from '@nestjs/common';
+
+import axios, { AxiosRequestConfig } from 'axios';
+
+import { Items } from '../../oyo/dto/response/items';
 
 @Injectable()
 export class NewsService {
@@ -11,7 +12,7 @@ export class NewsService {
   async getNews(keyword: string) {
     const keywordUTF = Buffer.from(keyword).toString('utf-8');
 
-    const url = `https://openapi.naver.com/v1/search/news.json?query=${keywordUTF}&display=100`;
+    const url = `https://openapi.naver.com/v1/search/news.json?query=${keywordUTF}&display=50`;
     const config: AxiosRequestConfig = {
       headers: {
         'X-Naver-Client-Id': process.env.NEWS_CLIENT_ID,
@@ -19,14 +20,8 @@ export class NewsService {
       },
     };
 
-    const { data } = await firstValueFrom(
-      this.httpService.get(url, config).pipe(
-        catchError((error: AxiosError) => {
-          Logger.error(error.response.data);
-          throw 'An error happened!';
-        }),
-      ),
-    );
-    return data;
+    const response = await axios.get<Items>(url, config);
+    
+    return response;
   }
 }
