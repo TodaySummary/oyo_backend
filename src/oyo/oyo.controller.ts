@@ -11,7 +11,7 @@ export class OyoController {
     return this.oyoService.generateTripPlan(generateTripDto);
   }
 
-  @Get()
+  @Get('/excel')
   @Header(
     'Content-Type',
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
