@@ -1,12 +1,14 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { OpenaiService } from 'src/util/openai/openai.service';
 import { GenerateTripDto } from './dto/request/generate-trip.dto';
+import { Plan, Plans } from './dto/response/trip-response.dto';
+import * as XLSX from 'xlsx';
 
 @Injectable()
 export class OyoService {
   constructor(private openaiService: OpenaiService) {}
 
-  async generateTripPlan(generateTripDto: GenerateTripDto) {
+  async generateTripPlan(generateTripDto: GenerateTripDto): Promise<Plans> {
     const { area, places, travelTime } = generateTripDto;
 
     const gpt = await this.openaiService.sendGpt([
@@ -28,7 +30,7 @@ export class OyoService {
           '- 형태는 JSON형태이지만 출력은 String으로 JSON의 형태만 갖춰서 출력해야합니다.\n' +
           '출력된 모든 값은 즉시 JSON.parse함수에 들어갈 예정이니 착오가 없어야 합니다.\n' +
           '값을 출력할 때에는 서론없이 JSON형태의 값만이 전송되어야 합니다.\n' +
-          '세부 값은 전부 한국어로 출력되어야 합니다.\n'
+          '세부 값은 전부 한국어로 출력되어야 합니다.\n',
       },
       {
         role: 'user',
@@ -36,6 +38,20 @@ export class OyoService {
       },
     ]);
 
-    return JSON.parse(gpt.choices[0].message.content);
+    return JSON.parse(gpt.choices[0].message.content) as Plans;
+  }
+
+  async generateTripExcel(generateTripDto: GenerateTripDto): Promise<Buffer> {
+    const wb = XLSX.utils.book_new();
+
+    const newWorksheet = XLSX.utils.json_to_sheet(
+      (await this.generateTripPlan(generateTripDto)).plan,
+    );
+
+    XLSX.utils.book_append_sheet(wb, newWorksheet, '여행계획');
+
+    const wbOptions: XLSX.WritingOptions = { bookType: 'xlsx', type: 'binary' };
+    const wbout = XLSX.write(wb, wbOptions);
+    return Buffer.from(wbout, 'base64');
   }
 }
