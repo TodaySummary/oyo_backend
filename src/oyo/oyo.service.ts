@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { OpenaiService } from 'src/util/openai/openai.service';
 import { GenerateTripDto } from './dto/request/generate-trip.dto';
 import { Plan, Plans } from './dto/response/trip-response.dto';
-import * as XLSX from 'xlsx';
+import * as ExcelJS from 'exceljs';
+import { Response } from 'express';
 
 @Injectable()
 export class OyoService {
@@ -41,17 +42,28 @@ export class OyoService {
     return JSON.parse(gpt.choices[0].message.content) as Plans;
   }
 
-  async generateTripExcel(generateTripDto: GenerateTripDto): Promise<Buffer> {
-    const wb = XLSX.utils.book_new();
+  async generateTripExcel(generateTripDto: GenerateTripDto, res: Response) {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('trip');
+    worksheet.columns = [
+      {'header': 'Start', key: 'start'},
+      {'header': 'End', key: 'end'},
+      {'header': 'Place', key: 'place'},
+    ]
 
-    const newWorksheet = XLSX.utils.json_to_sheet(
-      (await this.generateTripPlan(generateTripDto)).plan,
-    );
+    const plans:Plans = await this.generateTripPlan(generateTripDto);
 
-    XLSX.utils.book_append_sheet(wb, newWorksheet, '여행계획');
+    plans.plan.map((value: Plan) => {
+      worksheet.addRow({
+        start: value.start,
+        end: value.end,
+        place: value.place,
+      })
+    });
 
-    const wbOptions: XLSX.WritingOptions = { bookType: 'xlsx', type: 'binary' };
-    const wbout = XLSX.write(wb, wbOptions);
-    return Buffer.from(wbout, 'base64');
+    const buffer = await workbook.xlsx.writeBuffer();
+    res.header('Content-Disposition', 'attachment; filename=test.xlsx');
+    res.type('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.send(buffer);
   }
 }

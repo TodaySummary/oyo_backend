@@ -1,6 +1,7 @@
-import { Body, Controller, Get, Header } from '@nestjs/common';
+import { Body, Controller, Get, Logger, Post, Res } from '@nestjs/common';
 import { OyoService } from './oyo.service';
 import { GenerateTripDto } from './dto/request/generate-trip.dto';
+import { Response } from 'express';
 
 @Controller('oyo')
 export class OyoController {
@@ -11,13 +12,8 @@ export class OyoController {
     return this.oyoService.generateTripPlan(generateTripDto);
   }
 
-  @Get('/excel')
-  @Header(
-    'Content-Type',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  )
-  @Header('Content-Disposition', 'attachment; filename=users.xlsx')
-  generateTripExcel(@Body() generateTripDto: GenerateTripDto) {
-    return this.oyoService.generateTripExcel(generateTripDto);
+  @Post('/excel')
+  generateTripExcel(@Body() generateTripDto: GenerateTripDto, @Res() res: Response) {
+    return this.oyoService.generateTripExcel(generateTripDto, res);
   }
 }
