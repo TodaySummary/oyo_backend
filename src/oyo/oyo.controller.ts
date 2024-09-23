@@ -1,9 +1,10 @@
-import { Body, Controller, Get, Logger, Post, Res } from '@nestjs/common';
+import { Body, Controller, Get, Logger, Post, Res, UsePipes, ValidationPipe } from '@nestjs/common';
 import { OyoService } from './oyo.service';
 import { GenerateTripDto } from './dto/request/generate-trip.dto';
 import { Response } from 'express';
 
 @Controller('oyo')
+@UsePipes(ValidationPipe)
 export class OyoController {
   constructor(private oyoService: OyoService) {}
 
